@@ -15,11 +15,11 @@ const (
 )
 
 type Parcel struct {
-	Number    int
-	Client    int
-	Status    string
-	Address   string
-	CreatedAt string
+	Number    int    //номер посылки, целое число, автоинкрементное поле.
+	Client    int    //идентификатор клиента
+	Status    string //статус посылки
+	Address   string //адрес посылки
+	CreatedAt string //дата и время создания посылки
 }
 
 type ParcelService struct {
@@ -97,9 +97,15 @@ func (s ParcelService) Delete(number int) error {
 }
 
 func main() {
-	// настройте подключение к БД
+	//подключение к БД
+	db, err := sql.Open("sqlite", "tracker.db")
+	if err != nil {
+		fmt.Println("Ошибка подключения к БД:", err)
+		return
+	}
+	defer db.Close()
 
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	store := NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
 	service := NewParcelService(store)
 
 	// регистрация посылки
