@@ -95,7 +95,7 @@ func TestSetAddress(t *testing.T) {
 	stored, err := store.Get(parcel.Number)
 
 	require.NoError(t, err)
-	assert.Equal(t, parcel.Address, stored.Address)
+	assert.Equal(t, newAddress, stored.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -127,7 +127,7 @@ func TestSetStatus(t *testing.T) {
 
 	stored, err := store.Get(parcel.Number)
 
-	assert.Equal(t, parcel.Status, stored.Address)
+	assert.Equal(t, ParcelStatusDelivered, stored.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
@@ -153,7 +153,7 @@ func TestGetByClient(t *testing.T) {
 
 	// add
 	for i := 0; i < len(parcels); i++ {
-		id, err := store.Add(parcelMap[i]) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+		id, err := store.Add(parcels[i]) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 
 		require.NoError(t, err)
 		// обновляем идентификатор добавленной у посылки

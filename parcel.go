@@ -11,22 +11,13 @@ type ParcelStore struct {
 	db *sql.DB
 }
 
-/*type Parcel struct {
-number    	int 		//номер посылки, целое число, автоинкрементное поле.
-client    	int 		//идентификатор клиента
-status    	string 	//статус посылки
-address   	string	//адрес посылки
-created_at 	string	//дата и время создания посылки
-*/
-
 func NewParcelStore(db *sql.DB) ParcelStore {
 	return ParcelStore{db: db}
 }
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
 	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
-	res, err := s.db.Exec("INSERT INTO parcel (number, client, status, address, created_at) VALUES (:number, :client, :status, :address, :created_at)",
-		sql.Named("number", p.Number),
+	res, err := s.db.Exec("INSERT INTO parcel (client, status, address, created_at) VALUES (:client, :status, :address, :created_at)",
 		sql.Named("client", p.Client),
 		sql.Named("status", p.Status),
 		sql.Named("address", p.Address),
@@ -92,53 +83,36 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
 func (s ParcelStore) SetStatus(number int, status string) error {
 	// реализуйте обновление статуса в таблице parcel
+
 	_, err := s.db.Exec("UPDATE parcel SET status = :status WHERE number = :number",
 		sql.Named("status", status),
-		sql.Named("idnumber", number))
+		sql.Named("number", number))
 	return err
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	statusRow := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number",
-		sql.Named("number", number))
-	var status string
-	err := statusRow.Scan(&status)
+
+	_, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number AND status = :status",
+		sql.Named("address", address),
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
 	if err != nil {
-		fmt.Println("Ошибка добавления статуса в строку:", err)
 		return err
 	}
-	if status == ParcelStatusRegistered {
-		_, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number",
-			sql.Named("address", address),
-			sql.Named("number", number))
-		if err != nil {
-			fmt.Println("Ошибка обновления адреса:", err)
-		}
-		return nil
-	}
-	return fmt.Errorf("Неверный статус")
+	return nil
 }
 
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
 
-	statusRow := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number",
-		sql.Named("number", number))
-	var status string
-	err := statusRow.Scan(&status)
+	_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number AND status = :status",
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
 	if err != nil {
-		fmt.Println("Ошибка добавления статуса в строку:", err)
 		return err
 	}
-	if status == ParcelStatusRegistered {
-		_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number", sql.Named("number", number))
-		if err != nil {
-			fmt.Println("Ошибка удаления строки:", err)
-		}
-		return nil
-	}
-	return fmt.Errorf("Неверный статус для удаления строки")
+	return nil
 }
